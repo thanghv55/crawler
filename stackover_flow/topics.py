@@ -16,6 +16,7 @@ def run():
         data = get_object_html(url)
         get_questions(data)
         next_pages = get_next_page(data)
+        print next_pages
         if next_pages == -1:
             return
         url = 'https://stackoverflow.com/questions?page=' + str(next_pages) + '&sort=votes'
@@ -24,16 +25,19 @@ def run():
 def get_questions(data):
     questions_object = data.find('div', {'id': 'questions'})
     questions = questions_object.find_all('div', {'class': 'question-summary'})
-    print len(questions)
-    pool = ThreadPoolExecutor(max_workers=20)
-    for question in questions:
-        pool.submit(get_question_detail, question)
-    pool.shutdown(wait=True)
+    if questions is not None:
+        print len(questions)
+        pool = ThreadPoolExecutor(max_workers=20)
+        for question in questions:
+            pool.submit(get_question_detail, question)
+        pool.shutdown(wait=True)
 
 def get_question_detail(question):
     if check_question(question):
         url = get_question_link(question)
-        top_de.get_topic_detail(url)
+        temp = top_de.get_topic_detail(url)
+        if temp is not None:
+            insert_mongodb(temp)
 
 def get_question_link(question):
     a = question.find('a', {'class': 'question-hyperlink'})
@@ -55,6 +59,8 @@ def check_question(question):
 
 def get_next_page(data):
     pages = data.find('div', {'class': 'pager'})
+    if pages is None:
+        return -1
     current_pages = pages.find('span', {'class': 'current'})
     print current_pages.text
     if current_pages is None or int(current_pages.text) <= 0:
@@ -68,7 +74,7 @@ def get_object_html(url):
     return data
 
 def insert_mongodb(data):
-    mongo_client = MongoClient("localhost", 27017)
+    mongo_client = MongoClient("10.5.28.45", 27017)
     try:
         db = mongo_client.get_database("stackover_flow")
         collection = db.get_collection("questions")
@@ -76,6 +82,6 @@ def insert_mongodb(data):
     except:
         traceback.print_exc()
 
-url = "https://stackoverflow.com/questions"
-data = get_object_html(url)
-get_questions(data)
+#url = "https://stackoverflow.com/questions"
+#data = get_object_html(url)
+run()

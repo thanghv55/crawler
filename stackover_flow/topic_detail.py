@@ -4,6 +4,9 @@ from bs4 import BeautifulSoup
 import requests
 import json
 
+BASE_LINK = "https://stackoverflow.com"
+
+
 def get_topic_detail(url):
     result = {}
     data = get_object_html(url)
@@ -11,12 +14,14 @@ def get_topic_detail(url):
     title_question = get_title_question(data)
     content_question = get_content_question(data)
     question_vote_count = get_vote_count_post(data)
-
+    tags = get_tag(data)
     if answers is not None and len(answers) != 0:
         result['answers'] = answers
         result['title_question'] = title_question
         result['content_question'] = content_question
         result['question_vote_count'] = question_vote_count
+        result['tags'] = tags
+        result['url'] = url
         print json.dumps(result)
     return result
 
@@ -40,7 +45,10 @@ def get_content_question(data):
     content = []
     for elm in temp:
         if len(elm.findChildren()) == 0:
-            content.append({'tag_name': elm.name, "content": elm.text})
+            if elm.name == 'a':
+                content.append({'tag_name': elm.name, "content": elm.text, "link": BASE_LINK + elm['href']})
+            else:
+                content.append({'tag_name': elm.name, "content": elm.text})
     return content
 
 def get_answers(data):
@@ -62,7 +70,10 @@ def get_answer(answer_content):
         temp = answer_content.find("div", {'class': 'post-text'}).findChildren()
         for elm in temp:
             if len(elm.findChildren()) == 0:
-                content.append({'tag_name': elm.name, "content": elm.text})
+                if elm.name == 'a':
+                    content.append({'tag_name': elm.name, "content": elm.text, "link": BASE_LINK + elm['href']})
+                else:
+                    content.append({'tag_name': elm.name, "content": elm.text})
         return {'user_comment': username, 'data': content, 'answered_time': _time}
     return None
 
@@ -84,9 +95,19 @@ def get_time_comment(answer_content):
     answered_time = answered_time.find('span')
     return answered_time.text
 
+def get_tag(data):
+    tags_result = []
+    tags = data.find_all('a', {'class': 'post-tag'})
+    if tags is not None:
+        for tag in tags:
+            tags_result.append({'tag': tag.text, 'link': BASE_LINK + tag['href']})
+    return tags_result
 
-url = 'https://stackoverflow.com/questions/49114011/how-to-check-out-a-pull-request-with-jenkins-pipeline'
+
+
+
+#url = 'https://stackoverflow.com/questions/49114011/how-to-check-out-a-pull-request-with-jenkins-pipeline'
 #data = get_object_html(url)
 #print get_answers(data)
-
-get_topic_detail(url)
+#get_topic_detail(url)
+#get_tag(data)
