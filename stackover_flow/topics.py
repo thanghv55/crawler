@@ -74,7 +74,7 @@ def get_object_html(url):
     return data
 
 def insert_mongodb(data):
-    mongo_client = MongoClient("10.5.28.45", 27017)
+    mongo_client = MongoClient("localhost", 27017)
     try:
         db = mongo_client.get_database("stackover_flow")
         collection = db.get_collection("questions")
