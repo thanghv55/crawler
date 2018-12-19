@@ -78,6 +78,9 @@ def insert_mongodb(data):
     try:
         db = mongo_client.get_database("stackover_flow")
         collection = db.get_collection("questions")
+        id = data['url_id']
+        data.pop('url_id')
+        collection.find_and_modify({'url_id': id}, data, upsert=True)
         collection.insert(data)
     except:
         traceback.print_exc()

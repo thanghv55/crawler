@@ -3,6 +3,8 @@ __author__ = 'Hoangthang'
 from bs4 import BeautifulSoup
 import requests
 import json
+import re
+import traceback
 
 BASE_LINK = "https://stackoverflow.com"
 
@@ -22,7 +24,7 @@ def get_topic_detail(url):
         result['question_vote_count'] = question_vote_count
         result['tags'] = tags
         result['url'] = url
-        print json.dumps(result)
+        result['url_id'] = get_id_url(url)
     return result
 
 def get_object_html(url):
@@ -103,11 +105,18 @@ def get_tag(data):
             tags_result.append({'tag': tag.text, 'link': BASE_LINK + tag['href']})
     return tags_result
 
+def get_id_url(url):
+    try:
+        temp = re.findall('\d+', url)
+        if temp:
+            return int(temp[0])
+    except:
+        traceback.print_exc()
+    return -1
 
-
-
-#url = 'https://stackoverflow.com/questions/49114011/how-to-check-out-a-pull-request-with-jenkins-pipeline'
+url = 'https://stackoverflow.com/questions/49114011/how-to-check-out-a-pull-request-with-jenkins-pipeline'
 #data = get_object_html(url)
 #print get_answers(data)
-#get_topic_detail(url)
+#print get_topic_detail(url)
+print(get_id_url(url))
 #get_tag(data)
